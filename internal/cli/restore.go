@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"opencode-cli/internal/gitstore"
 	"opencode-cli/internal/restore"
 	"opencode-cli/internal/store"
 	"opencode-cli/internal/ui"
@@ -19,6 +21,7 @@ type restoreOptions struct {
 	projectQuery string
 	fileQuery    string
 	outputPath   string
+	noGit        bool
 }
 
 func NewRestoreCommand() *cobra.Command {
@@ -35,8 +38,9 @@ func NewRestoreCommand() *cobra.Command {
 	cmd.Flags().StringVar(&opts.storagePath, "storage", "~/.local/share/opencode/storage", "OpenCode storage directory")
 	cmd.Flags().StringVar(&opts.dbPath, "db", "", "Path to opencode.db (default: sibling of --storage)")
 	cmd.Flags().StringVar(&opts.projectQuery, "project", "", "Project id or worktree substring (skip project menu)")
-	cmd.Flags().StringVar(&opts.fileQuery, "file", "", "File path substring (skip file menu)")
+	cmd.Flags().StringVar(&opts.fileQuery, "file", "", "File path filter (substring, or /prefix for root-anchored match)")
 	cmd.Flags().StringVarP(&opts.outputPath, "output", "o", "", "Write reconstructed file to this path; pass --output without value to write to inferred original path")
+	cmd.Flags().BoolVar(&opts.noGit, "no-git", false, "Disable git history lookup source")
 	if outputFlag := cmd.Flags().Lookup("output"); outputFlag != nil {
 		outputFlag.NoOptDefVal = restore.OutputInferSentinel
 	}
@@ -94,6 +98,15 @@ func runRestore(opts *restoreOptions) error {
 	if err != nil {
 		return err
 	}
+
+	useGit := !opts.noGit && gitstore.IsRepository(project.Worktree)
+	if useGit {
+		gitFiles, err := gitstore.ListFiles(project.Worktree)
+		if err == nil {
+			files = mergeFileLists(files, gitFiles)
+		}
+	}
+
 	if len(files) == 0 {
 		return fmt.Errorf("no file diffs found for project %s", project.ID)
 	}
@@ -108,7 +121,15 @@ func runRestore(opts *restoreOptions) error {
 	}
 
 	for i, selectedFile := range selectedFiles {
-		result := restore.ReconstructLatest(history[selectedFile], snapshots[selectedFile])
+		allSnapshots := snapshots[selectedFile]
+		if useGit {
+			gitSnapshots, err := gitstore.LoadSnapshots(project.Worktree, selectedFile)
+			if err == nil && len(gitSnapshots) > 0 {
+				allSnapshots = append(allSnapshots, gitSnapshots...)
+			}
+		}
+
+		result := restore.ReconstructLatest(history[selectedFile], allSnapshots)
 
 		resolvedOutputPath, err := restore.ResolveOutputPath(opts.outputPath, project, selectedFile)
 		if err != nil {
@@ -139,4 +160,28 @@ func runRestore(opts *restoreOptions) error {
 	}
 
 	return nil
+}
+
+func mergeFileLists(existing []string, incoming []string) []string {
+	seen := make(map[string]bool, len(existing)+len(incoming))
+	merged := make([]string, 0, len(existing)+len(incoming))
+
+	for _, file := range existing {
+		if seen[file] {
+			continue
+		}
+		seen[file] = true
+		merged = append(merged, file)
+	}
+
+	for _, file := range incoming {
+		if seen[file] {
+			continue
+		}
+		seen[file] = true
+		merged = append(merged, file)
+	}
+
+	sort.Strings(merged)
+	return merged
 }

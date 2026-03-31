@@ -34,13 +34,20 @@ Content source priority:
 1. `storage/session_diff/<sessionID>.json` (preferred)
 2. `message.data.summary.diffs` from `opencode.db` (fallback if session_diff is missing)
 3. `part.data` tool snapshots from `opencode.db` (currently `read`/`write` tool payloads)
+4. Git history snapshots from the project repository (when project is a git repo)
 
-For each file, versions are collected from all available sources and the latest timestamp wins.
+For each file, versions are collected from all available sources and the latest UTC-normalized timestamp wins.
 
 ## Build
 
 ```bash
 go build -o opencode-helper .
+```
+
+With Taskfile (current OS/arch):
+
+```bash
+task build
 ```
 
 ## Usage
@@ -66,6 +73,12 @@ Print reconstructed content to stdout:
 ./opencode-helper restore --project <project-query> --file "<file-substring>"
 ```
 
+Root-anchored filter example:
+
+```bash
+./opencode-helper restore --file "/.planning"
+```
+
 Write back to inferred original path:
 
 ```bash
@@ -77,6 +90,7 @@ Write back to inferred original path:
 - `--storage` OpenCode storage directory (default `~/.local/share/opencode/storage`)
 - `--db` path to `opencode.db` (default: sibling of `--storage`)
 - `--project` project id or worktree substring
-- `--file` file path substring
+- `--file` file path filter (substring, or `/prefix` for root-anchored match)
+- `--no-git` disable git history lookup source
 - `-o, --output=<path>` write reconstructed content to a file instead of stdout
 - `-o, --output` (no value) write to inferred original file path under the selected project's worktree

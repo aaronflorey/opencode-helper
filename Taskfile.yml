@@ -1,0 +1,23 @@
+version: "3"
+
+vars:
+  BINARY_NAME: opencode-helper
+  GOEXE:
+    sh: go env GOEXE
+
+tasks:
+  default:
+    desc: Build for the current OS/arch
+    cmds:
+      - task: build
+
+  build:
+    desc: Build opencode-helper for the current OS/arch
+    cmds:
+      - mkdir -p dist
+      - go build -o "dist/{{.BINARY_NAME}}{{.GOEXE}}" .
+
+  clean:
+    desc: Remove local build artifacts
+    cmds:
+      - rm -rf dist

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"opencode-cli/internal/model"
 
@@ -280,6 +281,8 @@ func loadProjectSessionsFromDB(db *sql.DB, projectID string) ([]model.SessionRec
 		if err := rows.Scan(&s.ID, &s.ProjectID, &s.Directory, &s.Title, &s.Time.Created, &s.Time.Updated); err != nil {
 			return nil, fmt.Errorf("scanning session row: %w", err)
 		}
+		s.Time.Created = normalizeEpochMillis(s.Time.Created)
+		s.Time.Updated = normalizeEpochMillis(s.Time.Updated)
 		sessions = append(sessions, s)
 	}
 	if err := rows.Err(); err != nil {
@@ -307,6 +310,8 @@ func loadSessionsByDirectoryFromDB(db *sql.DB, directory string) ([]model.Sessio
 		if err := rows.Scan(&s.ID, &s.ProjectID, &s.Directory, &s.Title, &s.Time.Created, &s.Time.Updated); err != nil {
 			return nil, fmt.Errorf("scanning session row by directory: %w", err)
 		}
+		s.Time.Created = normalizeEpochMillis(s.Time.Created)
+		s.Time.Updated = normalizeEpochMillis(s.Time.Updated)
 		sessions = append(sessions, s)
 	}
 	if err := rows.Err(); err != nil {
@@ -386,7 +391,7 @@ func loadFileHistoryFromMessageSummaries(db *sql.DB, sessions []model.SessionRec
 
 			eventSession := s
 			if msgCreated > 0 {
-				eventSession.Time.Created = msgCreated
+				eventSession.Time.Created = normalizeEpochMillis(msgCreated)
 			}
 
 			for _, change := range payload.Summary.Diffs {
@@ -431,6 +436,8 @@ func loadSnapshotsFromPartToolOutputs(db *sql.DB, project model.ProjectRecord, s
 				rows.Close()
 				return nil, fmt.Errorf("scanning part row for session %s: %w", s.ID, err)
 			}
+
+			created = normalizeEpochMillis(created)
 
 			var payload struct {
 				Type  string `json:"type"`
@@ -557,4 +564,11 @@ func parseReadToolOutput(raw string) (string, bool) {
 	}
 
 	return strings.Join(out, "\n"), true
+}
+
+func normalizeEpochMillis(ms int64) int64 {
+	if ms <= 0 {
+		return ms
+	}
+	return time.UnixMilli(ms).UTC().UnixMilli()
 }

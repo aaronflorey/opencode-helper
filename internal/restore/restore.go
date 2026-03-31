@@ -73,7 +73,7 @@ func ReconstructLatest(events []model.FileEvent, snapshots []model.ContentSnapsh
 	}
 
 	for _, snap := range snapshots {
-		if !haveBest || snap.Timestamp >= best.Timestamp {
+		if !haveBest || isSnapshotBetter(snap, best) {
 			best = ReconstructionResult{Content: snap.Content, Source: snap.Source, Timestamp: snap.Timestamp}
 			haveBest = true
 		}
@@ -86,6 +86,30 @@ func ReconstructLatest(events []model.FileEvent, snapshots []model.ContentSnapsh
 		best.Source = "diff-replay"
 	}
 	return best
+}
+
+func isSnapshotBetter(snap model.ContentSnapshot, current ReconstructionResult) bool {
+	if snap.Timestamp != current.Timestamp {
+		return snap.Timestamp > current.Timestamp
+	}
+	return sourcePriority(snap.Source) > sourcePriority(current.Source)
+}
+
+func sourcePriority(source string) int {
+	switch source {
+	case "tool-write":
+		return 50
+	case "tool-read":
+		return 40
+	case "diff-replay":
+		return 30
+	case "message-summary":
+		return 20
+	case "git":
+		return 10
+	default:
+		return 0
+	}
 }
 
 func reconstructFromEvents(events []model.FileEvent) ReconstructionResult {

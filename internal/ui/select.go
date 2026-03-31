@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"opencode-cli/internal/model"
@@ -48,7 +49,7 @@ func PickFiles(files []string, history map[string][]model.FileEvent, snapshots m
 	if query != "" {
 		matches := make([]string, 0)
 		for _, f := range files {
-			if f == query || strings.Contains(strings.ToLower(f), strings.ToLower(query)) {
+			if matchesFileFilter(f, query) {
 				matches = append(matches, f)
 			}
 		}
@@ -70,15 +71,12 @@ func PickFiles(files []string, history map[string][]model.FileEvent, snapshots m
 		lookup[label] = f
 	}
 
+	prompt := "Select one or more files to reconstruct:"
 	if query != "" {
-		choice, err := Select("Select a file to reconstruct:", labels)
-		if err != nil {
-			return nil, err
-		}
-		return []string{lookup[choice]}, nil
+		prompt = fmt.Sprintf("Select one or more files matching %q:", query)
 	}
 
-	choices, err := MultiSelect("Select one or more files to reconstruct:", labels)
+	choices, err := MultiSelect(prompt, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +101,7 @@ func Select(message string, options []string) (string, error) {
 	}
 
 	selected := ""
-	prompt := &survey.Select{Message: message, Options: options, PageSize: 20}
+	prompt := &survey.Select{Message: message, Options: options, PageSize: 20, Filter: surveyFileFilter}
 	if err := survey.AskOne(prompt, &selected); err != nil {
 		return "", err
 	}
@@ -116,9 +114,40 @@ func MultiSelect(message string, options []string) ([]string, error) {
 	}
 
 	selected := make([]string, 0)
-	prompt := &survey.MultiSelect{Message: message, Options: options, PageSize: 20}
+	prompt := &survey.MultiSelect{Message: message, Options: options, PageSize: 20, Filter: surveyFileFilter}
 	if err := survey.AskOne(prompt, &selected); err != nil {
 		return nil, err
 	}
 	return selected, nil
+}
+
+func surveyFileFilter(filter string, value string, _ int) bool {
+	if strings.TrimSpace(filter) == "" {
+		return true
+	}
+	return matchesFileFilter(labelPath(value), filter)
+}
+
+func labelPath(label string) string {
+	if idx := strings.Index(label, " ("); idx > -1 {
+		return label[:idx]
+	}
+	return label
+}
+
+func matchesFileFilter(file string, filter string) bool {
+	needle := strings.TrimSpace(filter)
+	if needle == "" {
+		return true
+	}
+
+	fileLower := strings.ToLower(filepath.ToSlash(file))
+	needleLower := strings.ToLower(filepath.ToSlash(needle))
+
+	if strings.HasPrefix(needleLower, "/") {
+		prefix := strings.TrimPrefix(needleLower, "/")
+		return strings.HasPrefix(fileLower, prefix)
+	}
+
+	return fileLower == needleLower || strings.Contains(fileLower, needleLower)
 }
