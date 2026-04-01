@@ -41,3 +41,9 @@ type ContentSnapshot struct {
 	Source    string
 	SessionID string
 }
+
+type ToolUsageEvent struct {
+	SessionID string
+	Command   string
+	Output    string
+}

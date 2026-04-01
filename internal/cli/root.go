@@ -9,6 +9,7 @@ func NewRootCommand() *cobra.Command {
 	}
 
 	root.AddCommand(NewRestoreCommand())
+	root.AddCommand(NewToolUsageCommand())
 
 	return root
 }

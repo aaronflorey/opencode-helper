@@ -7,6 +7,7 @@ The tool is command-oriented and designed to grow over time.
 ## Current Commands
 
 - `restore` - reconstruct file contents from OpenCode history sources.
+- `tool-usage` - summarize bash tool command usage and estimated output tokens.
 
 ## Restore Command
 
@@ -94,3 +95,30 @@ Write back to inferred original path:
 - `--no-git` disable git history lookup source
 - `-o, --output=<path>` write reconstructed content to a file instead of stdout
 - `-o, --output` (no value) write to inferred original file path under the selected project's worktree
+
+## Tool Usage Command
+
+`tool-usage` scans OpenCode `part` records for `bash` tool calls and prints a grouped usage table:
+
+- `COMMAND` grouped command key
+- `RUNS` number of runs for that command key
+- `OUTPUT_TOKENS` estimated tokens consumed by tool output (char-count approximation)
+
+By default, the command scans all projects visible in the local `opencode.db`.
+
+Examples:
+
+```bash
+./opencode-helper tool-usage
+./opencode-helper tool-usage --limit 50
+./opencode-helper tool-usage --current-project
+./opencode-helper tool-usage --full-command
+```
+
+Flags:
+
+- `--storage` OpenCode storage directory (default `~/.local/share/opencode/storage`)
+- `--db` path to `opencode.db` (default: sibling of `--storage`)
+- `--current-project` only include data from the project matching current working directory
+- `--full-command` group by the exact raw command string instead of normalized command tokens
+- `--limit` max rows to print (default `25`, use `0` to show all)
