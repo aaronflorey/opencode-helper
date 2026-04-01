@@ -7,6 +7,25 @@ The tool is command-oriented and designed to grow over time.
 ## Current Commands
 
 - `restore` - reconstruct file contents from OpenCode history sources.
+- `usage` - report token usage and estimated cost by group/model.
+
+## Usage Command
+
+`usage` aggregates assistant token usage from both filesystem and SQLite sources:
+
+- `storage/message/<sessionID>/*.json`
+- `storage/session/<projectID>/<sessionID>.json`
+- `opencode.db` (`message` and `session` tables)
+
+Output is grouped with `--type` and each row is split by normalized model name:
+
+- `daily` (default)
+- `weekly`
+- `monthly`
+- `session`
+
+Pricing is fetched from LiteLLM pricing data, with OpenRouter as fallback/coverage expansion.
+Use `--json` for structured output.
 
 ## Restore Command
 
@@ -85,6 +104,14 @@ Write back to inferred original path:
 ./opencode-helper restore --file "STATE.md" --output
 ```
 
+Token usage report:
+
+```bash
+./opencode-helper usage --type daily
+./opencode-helper usage --type weekly --json
+./opencode-helper usage --type session
+```
+
 ## Flags
 
 - `--storage` OpenCode storage directory (default `~/.local/share/opencode/storage`)
@@ -94,3 +121,10 @@ Write back to inferred original path:
 - `--no-git` disable git history lookup source
 - `-o, --output=<path>` write reconstructed content to a file instead of stdout
 - `-o, --output` (no value) write to inferred original file path under the selected project's worktree
+
+`usage` flags:
+
+- `--storage` OpenCode storage directory (default `~/.local/share/opencode/storage`)
+- `--db` path to `opencode.db` (default: sibling of `--storage`)
+- `--type` grouping type: `daily|weekly|monthly|session`
+- `--json` output usage report as JSON
