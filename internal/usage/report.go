@@ -89,12 +89,23 @@ func BuildRows(messages []model.MessageRecord, sessions []model.SessionRecord, g
 		row.CacheWrite += msg.Tokens.CacheWrite
 		row.TotalTokens += tokenTotal(msg.Tokens)
 
-		if price, ok := prices.Resolve(msg.ProviderID, msg.ModelID); ok {
-			row.InputCost += tokenCost(msg.Tokens.Input, price.InputPer1M)
-			row.OutputCost += tokenCost(msg.Tokens.Output, price.OutputPer1M)
-			row.CacheReadCost += tokenCost(msg.Tokens.CacheRead, price.CacheReadPer1M)
-			row.CacheWriteCost += tokenCost(msg.Tokens.CacheWrite, price.CacheWritePer1M)
-			row.TotalCost = row.InputCost + row.OutputCost + row.CacheReadCost + row.CacheWriteCost
+		if msg.Cost > 0 {
+			row.TotalCost += msg.Cost
+			if row.PriceSource == "" {
+				row.PriceSource = "stored"
+			}
+			row.PriceFound = true
+		} else if price, ok := prices.Resolve(msg.ProviderID, msg.ModelID); ok {
+			inputCost := tokenCost(msg.Tokens.Input, price.InputPer1M)
+			outputCost := tokenCost(msg.Tokens.Output, price.OutputPer1M)
+			cacheReadCost := tokenCost(msg.Tokens.CacheRead, price.CacheReadPer1M)
+			cacheWriteCost := tokenCost(msg.Tokens.CacheWrite, price.CacheWritePer1M)
+
+			row.InputCost += inputCost
+			row.OutputCost += outputCost
+			row.CacheReadCost += cacheReadCost
+			row.CacheWriteCost += cacheWriteCost
+			row.TotalCost += inputCost + outputCost + cacheReadCost + cacheWriteCost
 			row.PriceSource = price.Source
 			row.PriceFound = true
 		}

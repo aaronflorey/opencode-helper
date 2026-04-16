@@ -5,7 +5,7 @@ project_name: opencode-helper
 
 before:
   hooks:
-    - go mod tidy
+    - go test ./...
 
 builds:
   - id: opencode-helper

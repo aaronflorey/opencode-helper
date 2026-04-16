@@ -40,6 +40,7 @@ type ContentSnapshot struct {
 	Timestamp int64
 	Source    string
 	SessionID string
+	Complete  bool
 }
 
 type ToolUsageEvent struct {

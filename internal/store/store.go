@@ -177,6 +177,11 @@ func BuildFileHistory(storage string, db *sql.DB, project model.ProjectRecord, s
 		}
 
 		for _, change := range changes {
+			normalized, ok := normalizeRelativeProjectPath(change.File)
+			if !ok {
+				continue
+			}
+			change.File = normalized
 			history[change.File] = append(history[change.File], model.FileEvent{Session: s, Change: change})
 		}
 		seenDiffSession[s.ID] = true
@@ -395,6 +400,11 @@ func loadFileHistoryFromMessageSummaries(db *sql.DB, sessions []model.SessionRec
 			}
 
 			for _, change := range payload.Summary.Diffs {
+				normalized, ok := normalizeRelativeProjectPath(change.File)
+				if !ok {
+					continue
+				}
+				change.File = normalized
 				history[change.File] = append(history[change.File], model.FileEvent{
 					Session: eventSession,
 					Change:  change,
@@ -465,16 +475,21 @@ func loadSnapshotsFromPartToolOutputs(db *sql.DB, project model.ProjectRecord, s
 				if !ok {
 					continue
 				}
-				content, ok := parseReadToolOutput(outputStr)
+				content, complete, ok := parseReadToolOutput(outputStr)
 				if !ok {
 					continue
+				}
+				source := "tool-read"
+				if !complete {
+					source = "tool-read-partial"
 				}
 				out[normalized] = append(out[normalized], model.ContentSnapshot{
 					File:      normalized,
 					Content:   content,
 					Timestamp: created,
-					Source:    "tool-read",
+					Source:    source,
 					SessionID: s.ID,
+					Complete:  complete,
 				})
 
 			case "write":
@@ -493,6 +508,7 @@ func loadSnapshotsFromPartToolOutputs(db *sql.DB, project model.ProjectRecord, s
 					Timestamp: created,
 					Source:    "tool-write",
 					SessionID: s.ID,
+					Complete:  true,
 				})
 			}
 		}
@@ -516,21 +532,44 @@ func normalizeProjectPath(worktree, raw string) string {
 		wt := filepath.Clean(worktree)
 		prefix := wt + string(os.PathSeparator)
 		if strings.HasPrefix(raw, prefix) {
-			return strings.TrimPrefix(raw, prefix)
+			raw = strings.TrimPrefix(raw, prefix)
+		} else {
+			return ""
 		}
+	}
+
+	normalized, ok := normalizeRelativeProjectPath(raw)
+	if !ok {
 		return ""
 	}
-	return raw
+	return normalized
 }
 
-func parseReadToolOutput(raw string) (string, bool) {
+func normalizeRelativeProjectPath(raw string) (string, bool) {
+	if raw == "" {
+		return "", false
+	}
+
+	normalized := filepath.Clean(raw)
+	if normalized == "." || normalized == "" || filepath.IsAbs(normalized) {
+		return "", false
+	}
+	if normalized == ".." || strings.HasPrefix(normalized, ".."+string(os.PathSeparator)) {
+		return "", false
+	}
+
+	return normalized, true
+}
+
+func parseReadToolOutput(raw string) (string, bool, bool) {
 	start := strings.Index(raw, "<content>")
 	end := strings.Index(raw, "</content>")
 	if start == -1 || end == -1 || end <= start {
-		return "", false
+		return "", false, false
 	}
 	body := raw[start+len("<content>") : end]
 	body = strings.TrimPrefix(body, "\n")
+	complete := strings.Contains(body, "(End of file")
 
 	lines := strings.Split(body, "\n")
 	out := make([]string, 0, len(lines))
@@ -563,7 +602,7 @@ func parseReadToolOutput(raw string) (string, bool) {
 		out = append(out, value)
 	}
 
-	return strings.Join(out, "\n"), true
+	return strings.Join(out, "\n"), complete, true
 }
 
 func normalizeEpochMillis(ms int64) int64 {

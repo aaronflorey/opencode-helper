@@ -55,7 +55,7 @@ func ResolveOutputPath(outputPath string, project model.ProjectRecord, file stri
 		if project.Worktree == "" {
 			return "", fmt.Errorf("cannot infer output path without project worktree")
 		}
-		return filepath.Join(project.Worktree, file), nil
+		return safeProjectOutputPath(project.Worktree, file)
 	}
 	if outputPath == "~" || strings.HasPrefix(outputPath, "~/") {
 		return store.ExpandPath(outputPath)
@@ -89,6 +89,9 @@ func ReconstructLatest(events []model.FileEvent, snapshots []model.ContentSnapsh
 }
 
 func isSnapshotBetter(snap model.ContentSnapshot, current ReconstructionResult) bool {
+	if snap.Source == "tool-read-partial" && current.Source != "" {
+		return false
+	}
 	if snap.Timestamp != current.Timestamp {
 		return snap.Timestamp > current.Timestamp
 	}
@@ -103,6 +106,8 @@ func sourcePriority(source string) int {
 		return 40
 	case "diff-replay":
 		return 30
+	case "tool-read-partial":
+		return 25
 	case "message-summary":
 		return 20
 	case "git":
@@ -153,4 +158,33 @@ func pathIsWithin(root, p string) bool {
 		return true
 	}
 	return strings.HasPrefix(p, root+string(os.PathSeparator))
+}
+
+func safeProjectOutputPath(worktree, file string) (string, error) {
+	cleanFile, err := cleanRelativeProjectFile(file)
+	if err != nil {
+		return "", err
+	}
+
+	worktree = filepath.Clean(worktree)
+	resolved := filepath.Join(worktree, cleanFile)
+	if !pathIsWithin(worktree, resolved) {
+		return "", fmt.Errorf("refusing to write outside project worktree for %q", file)
+	}
+
+	return resolved, nil
+}
+
+func cleanRelativeProjectFile(file string) (string, error) {
+	cleaned := filepath.Clean(file)
+	if cleaned == "." || cleaned == "" {
+		return "", fmt.Errorf("invalid project-relative file path %q", file)
+	}
+	if filepath.IsAbs(cleaned) {
+		return "", fmt.Errorf("refusing absolute project file path %q", file)
+	}
+	if cleaned == ".." || strings.HasPrefix(cleaned, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("refusing project file path outside worktree %q", file)
+	}
+	return cleaned, nil
 }
