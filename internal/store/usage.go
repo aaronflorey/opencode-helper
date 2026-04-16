@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 func LoadUsageSessions(storage string, db *sql.DB) ([]model.SessionRecord, error) {

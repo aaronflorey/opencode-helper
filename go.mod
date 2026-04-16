@@ -1,4 +1,4 @@
-module opencode-cli
+module github.com/aaronflorey/opencode-helper
 
 go 1.23.0
 

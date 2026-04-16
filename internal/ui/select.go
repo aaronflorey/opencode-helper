@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 
 	"github.com/AlecAivazis/survey/v2"
 )

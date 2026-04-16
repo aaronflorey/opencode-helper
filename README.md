@@ -1,6 +1,10 @@
 # opencode-helper
 
-`opencode-helper` is a CLI for inspecting and recovering data from a local OpenCode installation.
+[![CI](https://github.com/aaronflorey/opencode-helper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/aaronflorey/opencode-helper/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/aaronflorey/opencode-helper?display_name=tag&sort=semver&style=flat-square)](https://github.com/aaronflorey/opencode-helper/releases)
+[![License](https://img.shields.io/github/license/aaronflorey/opencode-helper?style=flat-square)](LICENSE)
+
+`opencode-helper` is a Go CLI for inspecting and recovering data from a local OpenCode installation.
 
 It currently focuses on three jobs:
 
@@ -8,23 +12,31 @@ It currently focuses on three jobs:
 - reporting token usage and estimated cost
 - summarizing `bash` tool usage from recorded sessions
 
-## What You Need
+## Installation
 
-- A local OpenCode data directory. By default the CLI reads `~/.local/share/opencode/storage`.
-- An `opencode.db` file next to that storage directory if you want database-backed project and message discovery.
-- Go `1.23+` if you want to build from source.
+### Homebrew
 
-## Install
+```bash
+brew tap aaronflorey/homebrew-tap
+brew install opencode-helper
+```
 
-### Download a release
+### Go install
 
-Download the latest archive from the repository's GitHub Releases page, extract it, and place `opencode-helper` on your `PATH`.
+```bash
+go install github.com/aaronflorey/opencode-helper@latest
+```
+
+### GitHub Releases
+
+Download the latest archive from the [GitHub Releases](https://github.com/aaronflorey/opencode-helper/releases) page, extract it, and place `opencode-helper` on your `PATH`.
 
 ### Build from source
 
 ```bash
-git clone <repo-url>
-cd opencode-cli
+git clone https://github.com/aaronflorey/opencode-helper.git
+cd opencode-helper
+mkdir -p dist
 go build -o dist/opencode-helper .
 ```
 
@@ -34,7 +46,15 @@ If you use `task`:
 task build
 ```
 
-## Quick Start
+## Setup
+
+You need:
+
+- a local OpenCode data directory; by default the CLI reads `~/.local/share/opencode/storage`
+- an `opencode.db` file next to that storage directory if you want database-backed project and message discovery
+- Go `1.23+` only if you want to build from source
+
+## Usage
 
 Show available commands:
 
@@ -162,3 +182,9 @@ go test ./...
 ```
 
 See `CONTRIBUTING.md` for the development workflow.
+
+## Releases
+
+Releases are managed with `release-please` and tagged as `vX.Y.Z`.
+
+When a release PR is merged, GitHub Actions publishes cross-platform binaries to GitHub Releases and updates the `aaronflorey/homebrew-tap` formula.

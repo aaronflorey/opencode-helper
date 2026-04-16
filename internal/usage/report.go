@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 type GroupType string

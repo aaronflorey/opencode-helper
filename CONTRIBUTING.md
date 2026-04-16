@@ -8,10 +8,12 @@ Requirements:
 
 - Go `1.23+`
 - Optional: `task` if you want to use the provided `Taskfile.yml`
+- Optional: `goreleaser` if you want to validate release packaging locally
 
 Build locally:
 
 ```bash
+mkdir -p dist
 go build -o dist/opencode-helper .
 ```
 
@@ -54,7 +56,13 @@ goreleaser release --snapshot --clean
 - Keep changes focused and avoid unrelated refactors.
 - Add or update tests when behavior changes.
 - Update `README.md` when user-facing behavior or flags change.
-- Use conventional commit prefixes when possible, such as `fix:`, `feat:`, or `docs:`. This keeps release-please changelogs useful.
+- Use conventional commit prefixes when possible, such as `fix:`, `feat:`, or `docs:`. This keeps release-please changelogs and version bumps accurate.
+
+## Releases
+
+- Releases are proposed by `release-please` and tagged as `vX.Y.Z`.
+- GoReleaser publishes archives to GitHub Releases and updates the Homebrew formula in `aaronflorey/homebrew-tap`.
+- If you change release packaging, update `.goreleaser.yaml` and `.github/workflows/release.yaml` together.
 
 ## Reporting Bugs
 

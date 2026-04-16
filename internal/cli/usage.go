@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"opencode-cli/internal/store"
-	"opencode-cli/internal/ui"
-	"opencode-cli/internal/usage"
+	"github.com/aaronflorey/opencode-helper/internal/store"
+	"github.com/aaronflorey/opencode-helper/internal/ui"
+	"github.com/aaronflorey/opencode-helper/internal/usage"
 
 	"github.com/spf13/cobra"
 )

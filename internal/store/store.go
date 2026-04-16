@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 
 	_ "modernc.org/sqlite"
 )

@@ -1,5 +1,9 @@
 # Security Policy
 
+## Supported Versions
+
+Security fixes are applied to the latest released version and the `main` branch.
+
 ## Reporting a Vulnerability
 
 Please do not open a public GitHub issue for security vulnerabilities.

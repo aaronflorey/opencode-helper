@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 func IsRepository(worktree string) bool {

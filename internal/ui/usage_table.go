@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"opencode-cli/internal/usage"
+	"github.com/aaronflorey/opencode-helper/internal/usage"
 
 	"github.com/charmbracelet/lipgloss"
 )

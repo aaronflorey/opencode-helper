@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"sort"
 
-	"opencode-cli/internal/gitstore"
-	"opencode-cli/internal/restore"
-	"opencode-cli/internal/store"
-	"opencode-cli/internal/ui"
+	"github.com/aaronflorey/opencode-helper/internal/gitstore"
+	"github.com/aaronflorey/opencode-helper/internal/restore"
+	"github.com/aaronflorey/opencode-helper/internal/store"
+	"github.com/aaronflorey/opencode-helper/internal/ui"
 
 	"github.com/spf13/cobra"
 )

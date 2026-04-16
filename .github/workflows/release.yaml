@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - main
+      - master
 
 permissions:
   contents: write
-  packages: write
   pull-requests: write
 
 jobs:
@@ -20,6 +20,9 @@ jobs:
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   goreleaser:
     runs-on: ubuntu-latest
@@ -27,7 +30,6 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     permissions:
       contents: write
-      packages: write
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v4
@@ -38,10 +40,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
+          cache: true
+          cache-dependency-path: go.sum
           go-version-file: go.mod
-
-      - name: Validate GoReleaser config
-        run: goreleaser check
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
@@ -51,3 +52,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

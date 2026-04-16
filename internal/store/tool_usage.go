@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 func LoadBashToolUsageEvents(db *sql.DB, projectID string) ([]model.ToolUsageEvent, error) {

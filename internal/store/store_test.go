@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 func TestBuildFileHistorySkipsUnsafePaths(t *testing.T) {

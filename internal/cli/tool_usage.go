@@ -10,9 +10,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"opencode-cli/internal/model"
-	"opencode-cli/internal/restore"
-	"opencode-cli/internal/store"
+	"github.com/aaronflorey/opencode-helper/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/restore"
+	"github.com/aaronflorey/opencode-helper/internal/store"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"

@@ -3,7 +3,7 @@ package usage
 import (
 	"testing"
 
-	"opencode-cli/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/model"
 )
 
 func TestBuildRowsUsesStoredCostAndPricingFallback(t *testing.T) {

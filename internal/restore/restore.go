@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"opencode-cli/internal/model"
-	"opencode-cli/internal/store"
+	"github.com/aaronflorey/opencode-helper/internal/model"
+	"github.com/aaronflorey/opencode-helper/internal/store"
 )
 
 const OutputInferSentinel = "__INFER_OUTPUT_PATH__"
