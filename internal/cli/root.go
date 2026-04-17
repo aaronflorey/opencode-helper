@@ -8,6 +8,7 @@ func NewRootCommand() *cobra.Command {
 		Short: "Utilities for OpenCode local data",
 	}
 
+	root.AddCommand(NewAddDirCommand())
 	root.AddCommand(NewRestoreCommand())
 	root.AddCommand(NewToolUsageCommand())
 	root.AddCommand(NewUsageCommand())
